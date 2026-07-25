@@ -1,19 +1,20 @@
-local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local Players = game:GetService("Players")
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 local camera = workspace.CurrentCamera
 
 -- 중복 실행 방지
-if CoreGui:FindFirstChild("UnnamedEnhancementsPanel") then
-    CoreGui.UnnamedEnhancementsPanel:Destroy()
+if playerGui:FindFirstChild("UnnamedEnhancementsPanel") then
+    playerGui.UnnamedEnhancementsPanel:Destroy()
 end
 
--- [1] Unnamed 스타일 메인 UI 패널 생성
+-- [1] 안전한 UI 패널 생성 (PlayerGui 방식)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UnnamedEnhancementsPanel"
-screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 500, 0, 380)
@@ -25,18 +26,16 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
--- 상단 타이틀 바
 local titleBar = Instance.new("TextLabel")
 titleBar.Size = UDim2.new(1, 0, 0, 26)
 titleBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 titleBar.TextColor3 = Color3.fromRGB(210, 210, 210)
 titleBar.TextSize = 12
 titleBar.Font = Enum.Font.Code
-titleBar.Text = "  UNNAMED ENHANCEMENTS - DISCORD.GG/ENHANCEMENT | RIVALS"
+titleBar.Text = "  UNNAMED ENHANCEMENTS - RIVALS"
 titleBar.TextXAlignment = Enum.TextXAlignment.Left
 titleBar.Parent = mainFrame
 
--- 기능 상태 테이블
 local toggles = {
     InfiniteJump = false,
     Fly = false,
@@ -46,14 +45,12 @@ local toggles = {
     VoidSpam = false
 }
 
-local MIN_SPEED, MAX_SPEED = 16, 150
 local currentSpeed = 16
 
--- 토글 체크박스 생성 함수
-local function createToggleUI(name, posX, posY, callback)
+local function createToggleUI(name, posY, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 220, 0, 24)
-    btn.Position = UDim2.new(0, posX, 0, posY)
+    btn.Position = UDim2.new(0, 15, 0, posY)
     btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     btn.TextColor3 = Color3.fromRGB(190, 190, 190)
     btn.TextSize = 11
@@ -78,31 +75,21 @@ local function createToggleUI(name, posX, posY, callback)
     end)
 end
 
--- UI 컨트롤 배치 (좌우 컬럼 형태)
-createToggleUI("AIMBOT (HEAD SNAP)", 15, 50, function(v) toggles.Aimbot = v end)
-createToggleUI("SILENT AIM (HIT FORCE)", 15, 80, function(v) toggles.SilentAim = v end)
-createToggleUI("RAGEBOT (EXTREME TARGET)", 15, 110, function(v) toggles.Ragebot = v end)
-createToggleUI("FLY MODE", 15, 140, function(v) toggles.Fly = v end)
-createToggleUI("INFINITE JUMP", 15, 170, function(v) toggles.InfiniteJump = v end)
-createToggleUI("VOID SPAM (1000해)", 15, 200, function(v) toggles.VoidSpam = v end)
+createToggleUI("AIMBOT", 50, function(v) toggles.Aimbot = v end)
+createToggleUI("SILENT AIM", 80, function(v) toggles.SilentAim = v end)
+createToggleUI("RAGEBOT", 110, function(v) toggles.Ragebot = v end)
+createToggleUI("FLY MODE", 140, function(v) toggles.Fly = v end)
+createToggleUI("INFINITE JUMP", 170, function(v) toggles.InfiniteJump = v end)
+createToggleUI("VOID SPAM (1000해)", 200, function(v) toggles.VoidSpam = v end)
 
--- 속도 표시 라벨
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(0, 220, 0, 24)
-speedLabel.Position = UDim2.new(0, 15, 0, 240)
-speedLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-speedLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-speedLabel.TextSize = 11
-speedLabel.Font = Enum.Font.Code
-speedLabel.Text = " SPEED: 16 (16 ~ 150)"
-speedLabel.TextXAlignment = Enum.TextXAlignment.Left
-speedLabel.Parent = mainFrame
-
--- [2] 핵심 연산 및 로직 통합
+-- [2] 핵심 로직 및 안전장치
 UIS.JumpRequest:Connect(function()
     local char = player.Character
-    if toggles.InfiniteJump and char and char:FindFirstChildOfClass("Humanoid") then
-        char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    if toggles.InfiniteJump and char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
     end
 end)
 
@@ -132,13 +119,15 @@ end
 local flyBV, flyBG
 local function updateFly(state, rootPart)
     if state and not flyBV and rootPart then
-        flyBV = Instance.new("BodyVelocity", rootPart)
+        flyBV = Instance.new("BodyVelocity")
         flyBV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         flyBV.Velocity = Vector3.zero
+        flyBV.Parent = rootPart
         
-        flyBG = Instance.new("BodyGyro", rootPart)
+        flyBG = Instance.new("BodyGyro")
         flyBG.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
         flyBG.CFrame = rootPart.CFrame
+        flyBG.Parent = rootPart
     elseif not state and flyBV then
         flyBV:Destroy()
         flyBG:Destroy()
@@ -146,11 +135,12 @@ local function updateFly(state, rootPart)
     end
 end
 
-RunService.RenderStepped:Connect(function(deltaTime)
+RunService.RenderStepped:Connect(function()
     local char = player.Character
-    if not char or not char:FindFirstChild("Humanoid") or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char.Humanoid
-    local rootPart = char.HumanoidRootPart
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not rootPart then return end
 
     humanoid.WalkSpeed = currentSpeed
 
@@ -166,7 +156,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
 
     local target = getBestTarget()
 
-    -- ① 레이지봇
     if toggles.Ragebot then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= player and p.Character then
@@ -180,7 +169,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
                 end
             end
         end
-    -- ② 에임봇
     elseif toggles.Aimbot and target and target.Character then
         local head = target.Character:FindFirstChild("Head")
         if head then
@@ -188,15 +176,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
         end
     end
 
-    -- ③ 사일런트봇 (머리 타격 강제 보정 훅)
-    if toggles.SilentAim and target and target.Character then
-        local head = target.Character:FindFirstChild("Head")
-        if head then
-            local absoluteHeadPos = head.Position
-        end
-    end
-
-    -- ④ 보이드 스팸 (하늘 위 1000해 스터드 전송)
     if toggles.VoidSpam and target and target.Character then
         local enemyRoot = target.Character:FindFirstChild("HumanoidRootPart")
         if enemyRoot then
