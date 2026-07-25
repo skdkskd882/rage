@@ -15,12 +15,11 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 420, 0, 320)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+mainFrame.Size = UDim2.new(0, 400, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -160)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 local corner = Instance.new("UICorner")
@@ -33,13 +32,41 @@ titleBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 titleBar.TextColor3 = Color3.fromRGB(240, 240, 240)
 titleBar.TextSize = 14
 titleBar.Font = Enum.Font.GothamBold
-titleBar.Text = "  DARK CONTROL PANEL"
+titleBar.Text = "  MOBILE & PC CONTROL PANEL"
 titleBar.TextXAlignment = Enum.TextXAlignment.Left
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleBar
+
+-- 모바일/PC 호환 드래그 시스템
+local dragging, dragInput, dragStart, startPos
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if dragging and dragInput then
+        local delta = dragInput.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
 
 local toggles = {
     InfiniteJump = false,
@@ -54,7 +81,7 @@ local currentSpeed = 16
 
 local function createToggleUI(name, posY, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 380, 0, 30)
+    btn.Size = UDim2.new(0, 360, 0, 30)
     btn.Position = UDim2.new(0, 20, 0, posY)
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -84,12 +111,12 @@ local function createToggleUI(name, posY, callback)
     end)
 end
 
-createToggleUI("AIMBOT", 50, function(v) toggles.Aimbot = v end)
-createToggleUI("SILENT AIM", 85, function(v) toggles.SilentAim = v end)
-createToggleUI("RAGEBOT", 120, function(v) toggles.Ragebot = v end)
-createToggleUI("FLY MODE", 155, function(v) toggles.Fly = v end)
-createToggleUI("INFINITE JUMP", 190, function(v) toggles.InfiniteJump = v end)
-createToggleUI("VOID SPAM (1000해)", 225, function(v) toggles.VoidSpam = v end)
+createToggleUI("AIMBOT", 45, function(v) toggles.Aimbot = v end)
+createToggleUI("SILENT AIM", 80, function(v) toggles.SilentAim = v end)
+createToggleUI("RAGEBOT", 115, function(v) toggles.Ragebot = v end)
+createToggleUI("FLY MODE", 150, function(v) toggles.Fly = v end)
+createToggleUI("INFINITE JUMP", 185, function(v) toggles.InfiniteJump = v end)
+createToggleUI("VOID SPAM (1000해)", 220, function(v) toggles.VoidSpam = v end)
 
 UIS.JumpRequest:Connect(function()
     local char = player.Character
