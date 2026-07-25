@@ -1,4 +1,4 @@
--- GOD-ENGINE | ULTIMATE SELF-REFINE SUPREME [v60]
+-- GOD-ENGINE | ULTIMATE SELF-REFINE SUPREME [v59]
 local Success, Fluent = pcall(function()
     return loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 end)
@@ -77,4 +77,4 @@ heartbeat:Connect(function()
     end
 end)
 
-Fluent:Notify({Title = "SYSTEM", Content = "100번 검증 및 최적화 완료", Duration = 3})
+Fluent:Notify({Title = "SYSTEM", Content = "100번의 정밀 연산 및 최고 효율 최적화 완료", Duration = 3})
