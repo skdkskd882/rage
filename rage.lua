@@ -5,36 +5,41 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local camera = workspace.CurrentCamera
 
--- 중복 실행 방지
-if playerGui:FindFirstChild("UnnamedEnhancementsPanel") then
-    playerGui.UnnamedEnhancementsPanel:Destroy()
+if playerGui:FindFirstChild("DarkCustomPanel") then
+    playerGui.DarkCustomPanel:Destroy()
 end
 
--- [1] 안전한 UI 패널 생성 (PlayerGui 방식)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UnnamedEnhancementsPanel"
+screenGui.Name = "DarkCustomPanel"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 500, 0, 380)
-mainFrame.Position = UDim2.new(0.5, -250, 0.5, -190)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-mainFrame.BorderSizePixel = 1
-mainFrame.BorderColor3 = Color3.fromRGB(45, 45, 45)
+mainFrame.Size = UDim2.new(0, 420, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = mainFrame
+
 local titleBar = Instance.new("TextLabel")
-titleBar.Size = UDim2.new(1, 0, 0, 26)
-titleBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-titleBar.TextColor3 = Color3.fromRGB(210, 210, 210)
-titleBar.TextSize = 12
-titleBar.Font = Enum.Font.Code
-titleBar.Text = "  UNNAMED ENHANCEMENTS - RIVALS"
+titleBar.Size = UDim2.new(1, 0, 0, 35)
+titleBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+titleBar.TextColor3 = Color3.fromRGB(240, 240, 240)
+titleBar.TextSize = 14
+titleBar.Font = Enum.Font.GothamBold
+titleBar.Text = "  DARK CONTROL PANEL"
 titleBar.TextXAlignment = Enum.TextXAlignment.Left
 titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleBar
 
 local toggles = {
     InfiniteJump = false,
@@ -49,40 +54,43 @@ local currentSpeed = 16
 
 local function createToggleUI(name, posY, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 220, 0, 24)
-    btn.Position = UDim2.new(0, 15, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    btn.TextColor3 = Color3.fromRGB(190, 190, 190)
-    btn.TextSize = 11
-    btn.Font = Enum.Font.Code
-    btn.Text = " [ ]  " .. name
+    btn.Size = UDim2.new(0, 380, 0, 30)
+    btn.Position = UDim2.new(0, 20, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 12
+    btn.Font = Enum.Font.Gotham
+    btn.Text = "  " .. name .. " [OFF]"
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Parent = mainFrame
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
 
     local state = false
     btn.MouseButton1Click:Connect(function()
         state = not state
         if state then
-            btn.Text = " [X]  " .. name
-            btn.BackgroundColor3 = Color3.fromRGB(0, 60, 30)
-            btn.TextColor3 = Color3.fromRGB(0, 255, 128)
+            btn.Text = "  " .. name .. " [ON]"
+            btn.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         else
-            btn.Text = " [ ]  " .. name
-            btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            btn.TextColor3 = Color3.fromRGB(190, 190, 190)
+            btn.Text = "  " .. name .. " [OFF]"
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            btn.TextColor3 = Color3.fromRGB(200, 200, 200)
         end
         callback(state)
     end)
 end
 
 createToggleUI("AIMBOT", 50, function(v) toggles.Aimbot = v end)
-createToggleUI("SILENT AIM", 80, function(v) toggles.SilentAim = v end)
-createToggleUI("RAGEBOT", 110, function(v) toggles.Ragebot = v end)
-createToggleUI("FLY MODE", 140, function(v) toggles.Fly = v end)
-createToggleUI("INFINITE JUMP", 170, function(v) toggles.InfiniteJump = v end)
-createToggleUI("VOID SPAM (1000해)", 200, function(v) toggles.VoidSpam = v end)
+createToggleUI("SILENT AIM", 85, function(v) toggles.SilentAim = v end)
+createToggleUI("RAGEBOT", 120, function(v) toggles.Ragebot = v end)
+createToggleUI("FLY MODE", 155, function(v) toggles.Fly = v end)
+createToggleUI("INFINITE JUMP", 190, function(v) toggles.InfiniteJump = v end)
+createToggleUI("VOID SPAM (1000해)", 225, function(v) toggles.VoidSpam = v end)
 
--- [2] 핵심 로직 및 안전장치
 UIS.JumpRequest:Connect(function()
     local char = player.Character
     if toggles.InfiniteJump and char then
